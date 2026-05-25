@@ -21,9 +21,9 @@ namespace PRN232.LMS.API.Controllers
         [ProducesResponseType(typeof(PagedResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Get([FromQuery] int? studentId, [FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null, [FromQuery] string? expand = null)
+        public async Task<IActionResult> Get([FromQuery] int? studentId, [FromQuery] int? courseId, [FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null, [FromQuery] string? expand = null)
         {
-            var result = await _enrollmentService.GetEnrollmentsAsync(studentId, search, sort, page, size, fields, expand);
+            var result = await _enrollmentService.GetEnrollmentsAsync(studentId, courseId, search, sort, page, size, fields, expand);
             return Ok(result);
         }
 

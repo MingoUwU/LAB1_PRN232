@@ -31,10 +31,18 @@ namespace PRN232.LMS.API.Controllers
         [ProducesResponseType(typeof(ResponseModel<CourseResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, [FromQuery] string? expand = null)
         {
-            var result = await _courseService.GetCourseByIdAsync(id);
+            var result = await _courseService.GetCourseByIdAsync(id, expand);
             if (!result.Success) return NotFound(result);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/enrollments")]
+        [ProducesResponseType(typeof(PagedResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetEnrollmentsByCourse([FromServices] IEnrollmentService enrollmentService, int id, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? expand = null)
+        {
+            var result = await enrollmentService.GetEnrollmentsAsync(null, id, null, null, page, size, null, expand);
             return Ok(result);
         }
 

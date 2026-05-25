@@ -23,13 +23,18 @@ namespace PRN232.LMS.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<PagedResponseModel<EnrollmentResponseModel>> GetEnrollmentsAsync(int? studentId, string? search, string? sort, int page, int size, string? fields, string? expand)
+        public async Task<PagedResponseModel<EnrollmentResponseModel>> GetEnrollmentsAsync(int? studentId, int? courseId, string? search, string? sort, int page, int size, string? fields, string? expand)
         {
             var query = _unitOfWork.Enrollments.GetQueryable();
 
             if (studentId.HasValue)
             {
                 query = query.Where(e => e.StudentId == studentId.Value);
+            }
+
+            if (courseId.HasValue)
+            {
+                query = query.Where(e => e.CourseId == courseId.Value);
             }
 
             if (!string.IsNullOrEmpty(expand))

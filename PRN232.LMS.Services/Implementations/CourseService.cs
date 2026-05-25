@@ -95,11 +95,24 @@ namespace PRN232.LMS.Services.Implementations
             };
         }
 
-        public async Task<ResponseModel<CourseResponseModel>> GetCourseByIdAsync(int id)
+        public async Task<ResponseModel<CourseResponseModel>> GetCourseByIdAsync(int id, string? expand = null)
         {
-            var course = await _unitOfWork.Courses.GetByIdAsync(id);
+            var query = _unitOfWork.Courses.GetQueryable();
+            if (!string.IsNullOrEmpty(expand) && expand.Contains("semester", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Include(c => c.Semester);
+            }
+            var course = await query.FirstOrDefaultAsync(c => c.CourseId == id);
+            
             if (course == null) return new ResponseModel<CourseResponseModel> { Success = false, Message = "Not found", Errors = new List<string> { "Not Found" } };
-            return new ResponseModel<CourseResponseModel> { Success = true, Data = _mapper.Map<CourseResponseModel>(course) };
+            
+            var dto = _mapper.Map<CourseResponseModel>(course);
+            if (string.IsNullOrEmpty(expand) || !expand.Contains("semester", StringComparison.OrdinalIgnoreCase))
+            {
+                dto.Semester = null;
+            }
+            
+            return new ResponseModel<CourseResponseModel> { Success = true, Message = "Retrieved successfully", Data = dto };
         }
 
         public async Task<ResponseModel<CourseResponseModel>> CreateCourseAsync(CourseRequestModel model)

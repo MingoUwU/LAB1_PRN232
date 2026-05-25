@@ -42,7 +42,7 @@ namespace PRN232.LMS.API.Controllers
         [ProducesResponseType(typeof(PagedResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetEnrollmentsByStudent([FromServices] IEnrollmentService enrollmentService, int id, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? expand = null)
         {
-            var result = await enrollmentService.GetEnrollmentsAsync(id, null, null, page, size, null, expand);
+            var result = await enrollmentService.GetEnrollmentsAsync(id, null, null, null, page, size, null, expand);
             return Ok(result);
         }
 
