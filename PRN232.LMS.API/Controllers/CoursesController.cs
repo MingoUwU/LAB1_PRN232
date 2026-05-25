@@ -21,9 +21,9 @@ namespace PRN232.LMS.API.Controllers
         [ProducesResponseType(typeof(PagedResponseModel<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Get([FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null)
+        public async Task<IActionResult> Get([FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null, [FromQuery] string? expand = null)
         {
-            var result = await _courseService.GetCoursesAsync(search, sort, page, size, fields);
+            var result = await _courseService.GetCoursesAsync(search, sort, page, size, fields, expand);
             return Ok(result);
         }
 

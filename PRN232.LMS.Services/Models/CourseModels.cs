@@ -17,5 +17,7 @@ namespace PRN232.LMS.Services.Models
 
     public class CourseResponseModel : CourseBusinessModel
     {
+        [System.Text.Json.Serialization.JsonPropertyOrder(99)]
+        public SemesterResponseModel? Semester { get; set; }
     }
 }

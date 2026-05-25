@@ -23,9 +23,19 @@ namespace PRN232.LMS.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<PagedResponseModel<object>> GetCoursesAsync(string? search, string? sort, int page, int size, string? fields)
+        public async Task<PagedResponseModel<object>> GetCoursesAsync(string? search, string? sort, int page, int size, string? fields, string? expand)
         {
             var query = _unitOfWork.Courses.GetQueryable();
+
+            if (!string.IsNullOrEmpty(expand))
+            {
+                var expansions = expand.Split(',');
+                foreach (var exp in expansions)
+                {
+                    if (exp.Equals("semester", StringComparison.OrdinalIgnoreCase))
+                        query = query.Include(c => c.Semester);
+                }
+            }
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -49,6 +59,13 @@ namespace PRN232.LMS.Services.Implementations
             var totalPages = (int)Math.Ceiling(totalItems / (double)size);
             var items = await query.Skip((page - 1) * size).Take(size).ToListAsync();
             var dtos = _mapper.Map<IEnumerable<CourseResponseModel>>(items).ToList();
+
+            bool expandSemester = !string.IsNullOrEmpty(expand) && expand.Contains("semester", StringComparison.OrdinalIgnoreCase);
+            foreach (var dto in dtos)
+            {
+                if (!expandSemester) dto.Semester = null;
+            }
+
             var shapedData = new List<object>();
 
             if (!string.IsNullOrWhiteSpace(fields))
