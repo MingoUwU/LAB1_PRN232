@@ -1,0 +1,8 @@
+**/*.pdf
+**/*.md
+bin/
+obj/
+.git/
+.vs/
+.vscode/
+*.slnx.user
