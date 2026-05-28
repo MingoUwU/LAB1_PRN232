@@ -1,26 +1,62 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using PRN232.LMS.API.Middlewares;
 using PRN232.LMS.Repositories;
 using PRN232.LMS.Services;
+using System;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        options.RespectBrowserAcceptHeader = true;
+        options.ReturnHttpNotAcceptable = true;
+    })
+    .AddXmlDataContractSerializerFormatters()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_SECRET") ?? "SuperSecretKeyForDevelopmentOnly123456!";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        };
+    });
+
 // Cấu hình Database
-// Chương trình sẽ ưu tiên đọc chuỗi kết nối "DefaultConnection" từ file appsettings.json (Dành cho chạy nội bộ bằng Visual Studio).
-// Nếu không tìm thấy, nó sẽ dùng chuỗi kết nối mặc định phía sau (Dành cho khi chạy bằng Docker).
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Xử lý triệt để lỗi "LocalDB is not supported on this platform" khi chạy Docker
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Docker")
 {
     connectionString = "Server=db;Database=LMSDb;User Id=sa;Password=Trungnam@12345;TrustServerCertificate=True;";
@@ -39,26 +75,57 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LMS API v1", Version = "v1" });
+    c.SwaggerDoc("v2", new OpenApiInfo { Title = "LMS API v2", Version = "v2" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
-app.UseCors("AllowAll"); // Enable CORS
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
-// Configure the HTTP request pipeline.
+app.UseCors("AllowAll");
+
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LMS API v1");
+        c.SwaggerEndpoint("/swagger/v2/swagger.json", "LMS API v2");
+    });
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Apply migrations automatically with retry logic (vì Docker SQL Server có thể khởi động chậm)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LmsDbContext>();
@@ -67,13 +134,14 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
+            db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
-            break; // Thành công thì thoát vòng lặp
+            break; 
         }
         catch (System.Exception)
         {
-            if (i == maxRetry - 1) throw; // Nếu thử 5 lần vẫn lỗi thì throw
-            System.Threading.Thread.Sleep(3000); // Chờ 3s rồi thử lại
+            if (i == maxRetry - 1) throw; 
+            System.Threading.Thread.Sleep(3000); 
         }
     }
 }

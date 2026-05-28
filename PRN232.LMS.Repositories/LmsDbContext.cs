@@ -16,6 +16,8 @@ namespace PRN232.LMS.Repositories
         public DbSet<Subject> Subjects { get; set; } = null!;
         public DbSet<Student> Students { get; set; } = null!;
         public DbSet<Enrollment> Enrollments { get; set; } = null!;
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +62,22 @@ namespace PRN232.LMS.Repositories
                     .HasForeignKey(d => d.CourseId);
             });
 
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.UserId);
+                entity.Property(e => e.Username).HasMaxLength(50);
+                entity.Property(e => e.PasswordHash).HasMaxLength(255);
+                entity.Property(e => e.Role).HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.RefreshTokens)
+                    .HasForeignKey(d => d.UserId);
+            });
+
             // Seed data
             SeedData(modelBuilder);
         }
@@ -100,6 +118,18 @@ namespace PRN232.LMS.Repositories
                 enrollments.Add(new Enrollment { EnrollmentId = i, StudentId = ((i - 1) % 50) + 1, CourseId = ((i - 1) % 20) + 1, EnrollDate = DateTime.Now, Status = "Active" });
             }
             modelBuilder.Entity<Enrollment>().HasData(enrollments);
+
+            // Seed Admin User (Password: 123456)
+            // PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456");
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    UserId = 1,
+                    Username = "admin",
+                    PasswordHash = "$2a$11$wS56.j0p1C0P.iU/JtZfD.h1YQ3V/5qR3mYx0J6W7R6K7b8K9q12S", // 123456 using bcrypt
+                    Role = "Admin"
+                }
+            );
         }
     }
 }
