@@ -1,4 +1,6 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.Services.Interfaces;
 using PRN232.LMS.Services.Models;
@@ -7,7 +9,9 @@ using System.Threading.Tasks;
 namespace PRN232.LMS.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class StudentsController : ControllerBase
     {
         private readonly IStudentService _studentService;
@@ -18,27 +22,31 @@ namespace PRN232.LMS.API.Controllers
         }
 
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(PagedResponseModel<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Get([FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null)
+        public async Task<IActionResult> Get([FromHeader(Name = "X-Request-Id")] string? requestId, [FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null)
         {
             var result = await _studentService.GetStudentsAsync(search, sort, page, size, fields);
+            if (!string.IsNullOrEmpty(requestId)) Response.Headers["X-Request-Id"] = requestId;
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}", Name = "GetStudentById")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById([FromRoute] int id)
         {
             var result = await _studentService.GetStudentByIdAsync(id);
             if (!result.Success) return NotFound(result);
             return Ok(result);
         }
 
-        [HttpGet("{id}/enrollments")]
+        [HttpGet("{id:int}/enrollments")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(PagedResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetEnrollmentsByStudent([FromServices] IEnrollmentService enrollmentService, int id, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? expand = null)
         {
@@ -47,16 +55,18 @@ namespace PRN232.LMS.API.Controllers
         }
 
         [HttpPost]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] StudentRequestModel model)
         {
             var result = await _studentService.CreateStudentAsync(model);
-            return CreatedAtAction(nameof(GetById), new { id = result.Data?.StudentId }, result);
+            return CreatedAtRoute("GetStudentById", new { id = result.Data?.StudentId, version = "1.0" }, result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -67,7 +77,8 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
+        [MapToApiVersion("1.0")]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -76,6 +87,43 @@ namespace PRN232.LMS.API.Controllers
             var result = await _studentService.DeleteStudentAsync(id);
             if (!result.Success) return NotFound(result);
             return Ok(result);
+        }
+    
+        [HttpGet]
+        [MapToApiVersion("2.0")]
+        [Authorize]
+        [ProducesResponseType(typeof(PagedResponseModel<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetV2([FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null)
+        {
+            var result = await _studentService.GetStudentsAsync(search, sort, page, size, fields);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}", Name = "GetStudentByIdV2")]
+        [MapToApiVersion("2.0")]
+        [Authorize]
+        [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetByIdV2(int id)
+        {
+            var result = await _studentService.GetStudentByIdAsync(id);
+            if (!result.Success) return NotFound(result);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [MapToApiVersion("2.0")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(ResponseModel<StudentResponseModel>), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateV2([FromBody] StudentRequestModel model)
+        {
+            var result = await _studentService.CreateStudentAsync(model);
+            return CreatedAtRoute("GetStudentByIdV2", new { id = result.Data?.StudentId, version = "2.0" }, result);
         }
     }
 }

@@ -7,5 +7,6 @@ namespace PRN232.LMS.Services.Interfaces
     {
         Task<TokenResponse?> LoginAsync(LoginRequest request);
         Task<TokenResponse?> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<bool> RevokeTokenAsync(string token);
     }
 }

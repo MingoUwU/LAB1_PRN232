@@ -24,4 +24,10 @@ namespace PRN232.LMS.Services.Models
         [Required]
         public string RefreshToken { get; set; } = null!;
     }
+
+    public class RevokeTokenRequest
+    {
+        [Required]
+        public string Token { get; set; } = null!;
+    }
 }

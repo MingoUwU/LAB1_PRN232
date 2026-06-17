@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.Services.Interfaces;
@@ -7,7 +8,9 @@ using System.Threading.Tasks;
 namespace PRN232.LMS.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class EnrollmentsController : ControllerBase
     {
         private readonly IEnrollmentService _enrollmentService;
@@ -27,7 +30,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<EnrollmentResponseModel>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -48,7 +51,7 @@ namespace PRN232.LMS.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Data?.EnrollmentId }, result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<EnrollmentResponseModel>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -59,7 +62,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -71,3 +74,7 @@ namespace PRN232.LMS.API.Controllers
         }
     }
 }
+
+
+
+

@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using PRN232.LMS.Repositories;
 using PRN232.LMS.Repositories.Implementations;
@@ -21,9 +22,12 @@ namespace PRN232.LMS.Services
             services.AddScoped<ISemesterService, SemesterService>();
             services.AddScoped<ISubjectService, SubjectService>();
 
+            services.AddScoped<IAuthService, AuthService>();
             services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+            services.AddValidatorsFromAssembly(typeof(ServiceRegistration).Assembly);
 
             return services;
         }
     }
 }
+

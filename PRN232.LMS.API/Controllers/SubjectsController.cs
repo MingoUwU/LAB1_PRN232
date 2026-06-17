@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.Services.Interfaces;
@@ -7,7 +8,9 @@ using System.Threading.Tasks;
 namespace PRN232.LMS.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class SubjectsController : ControllerBase
     {
         private readonly ISubjectService _subjectService;
@@ -25,7 +28,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<SubjectResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetById(int id)
         {
@@ -42,7 +45,7 @@ namespace PRN232.LMS.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Data?.SubjectId }, result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<SubjectResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Update(int id, [FromBody] SubjectRequestModel model)
         {
@@ -51,7 +54,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Delete(int id)
         {
@@ -61,3 +64,7 @@ namespace PRN232.LMS.API.Controllers
         }
     }
 }
+
+
+
+

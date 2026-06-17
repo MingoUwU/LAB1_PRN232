@@ -126,7 +126,7 @@ namespace PRN232.LMS.Repositories
                 {
                     UserId = 1,
                     Username = "admin",
-                    PasswordHash = "$2a$11$wS56.j0p1C0P.iU/JtZfD.h1YQ3V/5qR3mYx0J6W7R6K7b8K9q12S", // 123456 using bcrypt
+                    PasswordHash = "$2a$11$BAw1wi3f60j7x2XzbChWpeZtLHjRNbToBWVMtsD.JQGargUDYmADG", // 123456 using bcrypt
                     Role = "Admin"
                 }
             );

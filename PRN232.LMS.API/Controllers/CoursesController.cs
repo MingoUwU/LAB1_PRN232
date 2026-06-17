@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.Services.Interfaces;
@@ -7,7 +8,9 @@ using System.Threading.Tasks;
 namespace PRN232.LMS.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class CoursesController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -27,7 +30,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<CourseResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -38,7 +41,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}/enrollments")]
+        [HttpGet("{id:int}/enrollments")]
         [ProducesResponseType(typeof(PagedResponseModel<EnrollmentResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetEnrollmentsByCourse([FromServices] IEnrollmentService enrollmentService, int id, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? expand = null)
         {
@@ -56,7 +59,7 @@ namespace PRN232.LMS.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Data?.CourseId }, result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<CourseResponseModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -68,7 +71,7 @@ namespace PRN232.LMS.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -80,3 +83,7 @@ namespace PRN232.LMS.API.Controllers
         }
     }
 }
+
+
+
+
