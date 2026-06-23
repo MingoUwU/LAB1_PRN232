@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "CourseService.Grpc";
+
+package student;
+
+service StudentGrpc {
+  rpc CheckStudentExists (StudentExistsRequest) returns (StudentExistsResponse);
+}
+
+message StudentExistsRequest {
+  int32 studentId = 1;
+}
+
+message StudentExistsResponse {
+  bool exists = 1;
+}

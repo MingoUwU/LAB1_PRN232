@@ -1,0 +1,70 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using CourseService.Services;
+using Shared.Models;
+using System.Threading.Tasks;
+
+namespace CourseService.Controllers
+{
+    [ApiController]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
+    public class SubjectsController : ControllerBase
+    {
+        private readonly ISubjectService _subjectService;
+
+        public SubjectsController(ISubjectService subjectService)
+        {
+            _subjectService = subjectService;
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(PagedResponseModel<object>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Get([FromQuery] string? search, [FromQuery] string? sort, [FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? fields = null)
+        {
+            var result = await _subjectService.GetSubjectsAsync(search, sort, page, size, fields);
+            return Ok(result);
+        }
+
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(ResponseModel<SubjectResponseModel>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _subjectService.GetSubjectByIdAsync(id);
+            if (!result.Success) return NotFound(result);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(ResponseModel<SubjectResponseModel>), StatusCodes.Status201Created)]
+        public async Task<IActionResult> Create([FromBody] SubjectRequestModel model)
+        {
+            var result = await _subjectService.CreateSubjectAsync(model);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data?.SubjectId }, result);
+        }
+
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(typeof(ResponseModel<SubjectResponseModel>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Update(int id, [FromBody] SubjectRequestModel model)
+        {
+            var result = await _subjectService.UpdateSubjectAsync(id, model);
+            if (!result.Success) return NotFound(result);
+            return Ok(result);
+        }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(typeof(ResponseModel<bool>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _subjectService.DeleteSubjectAsync(id);
+            if (!result.Success) return NotFound(result);
+            return Ok(result);
+        }
+    }
+}
+
+
+
+
