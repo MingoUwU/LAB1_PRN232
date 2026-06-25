@@ -11,9 +11,9 @@
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
-**/bin/
-**/obj/
-bin/
-obj/
-**/logs/
-**/Logs/
+**/bin
+**/obj
+bin
+obj
+**/logs
+**/Logs

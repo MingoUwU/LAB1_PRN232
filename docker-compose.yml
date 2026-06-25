@@ -15,6 +15,7 @@ services:
     build:
       context: .
       dockerfile: IdentityService/Dockerfile
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
     ports:
@@ -26,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: StudentService/Dockerfile
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
     ports:
@@ -38,6 +40,7 @@ services:
     build:
       context: .
       dockerfile: CourseService/Dockerfile
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - Grpc__StudentService=http://student-service:8081
@@ -51,6 +54,7 @@ services:
     build:
       context: .
       dockerfile: ApiGateway/Dockerfile
+    restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
     ports:
