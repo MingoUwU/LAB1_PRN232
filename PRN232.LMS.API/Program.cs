@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using PRN232.LMS.API.Middlewares;
+using PRN232.LMS.API.Middleware;
 using PRN232.LMS.Repositories;
 using PRN232.LMS.Services;
 using System;
